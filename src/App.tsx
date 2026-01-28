@@ -12,11 +12,15 @@ import TopUpPage from './pages/TopUpPage'
 import TransferPage from './pages/TransferPage'
 import TransactionHistoryPage from './pages/TransactionHistoryPage'
 import TransactionDetailsPage from './pages/TransactionDetailsPage'
+import { Toaster } from 'react-hot-toast'
+import NotificationListener from './components/NotificationListener'
 
 function App() {
 
   return (
     <AuthProvider>
+      <Toaster />
+      <NotificationListener />
       <Routes>
         <Route path="/login" element={<LoginPage/>}/>
         <Route path="/register" element={<RegisterPage/>}/>

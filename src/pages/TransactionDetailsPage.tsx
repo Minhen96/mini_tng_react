@@ -12,28 +12,49 @@ export default function TransactionDetailsPage() {
     const [walletId, setWalletId] = useState<string>('');
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchData = async () => {
-            setLoading(true);
+            if (!transaction) setLoading(true); 
+            
             try {
                 if (transactionId) {
                     const [balanceData, txData] = await Promise.all([
                         getBalance(),
                         getTransactionDetails(transactionId)
                     ]);
-                    setWalletId(balanceData.walletId);
-                    setTransaction(txData);
+                    
+                    if (isMounted) {
+                        setWalletId(balanceData.walletId);
+                        setTransaction(txData);
+                        setLoading(false);
+                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch details", error);
+                if (isMounted) setLoading(false);
             }
-            setLoading(false);
         }
+        
         fetchData();
-    }, [transactionId]);
+
+        // Listen for real-time SSE updates
+        const handleUpdate = () => {
+            console.log("⚡ Real-time update received!");
+            fetchData();
+        };
+
+        window.addEventListener('TRANSACTION_UPDATED', handleUpdate);
+        
+        return () => { 
+            isMounted = false;
+            window.removeEventListener('TRANSACTION_UPDATED', handleUpdate);
+        };
+    }, [transactionId, transaction?.status]);
 
     const isIncoming = (tx: Transaction) => {
-        if (tx.fromWalletId === 'SYSTEM') return true;
-        if (tx.toWalletId === walletId) return true;
+        if (tx.fromUserId === 'SYSTEM') return true;
+        if (tx.toUserId === walletId) return true;
         return false;
     }
 
@@ -64,7 +85,7 @@ export default function TransactionDetailsPage() {
                         <p className={`text-3xl font-bold mb-1 ${incoming ? 'text-green-400' : 'text-white'}`}>
                             {incoming ? '+' : '-'}${transaction.amount.toLocaleString()}
                         </p>
-                        <p className="text-white/60 text-sm">{transaction.fromWalletId === 'SYSTEM' ? 'Top Up Success' : incoming ? 'Payment Received' : 'Transfer Sent'}</p>
+                        <p className="text-white/60 text-sm">{transaction.fromUserId === 'SYSTEM' ? 'Top Up Success' : incoming ? 'Payment Received' : 'Transfer Sent'}</p>
                         
                         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mt-4 ${
                             transaction.status === 'SUCCESS' ? 'bg-green-500/10 text-green-400' : 
@@ -105,13 +126,13 @@ export default function TransactionDetailsPage() {
                         <div className="space-y-1">
                             <p className="text-white/40 text-xs uppercase tracking-wider">From Wallet</p>
                             <p className="text-white text-sm break-all font-mono bg-white/5 p-2 rounded">
-                                {transaction.fromWalletId}
+                                {transaction.fromUserId}
                             </p>
                         </div>
                          <div className="space-y-1">
                             <p className="text-white/40 text-xs uppercase tracking-wider">To Wallet</p>
                             <p className="text-white text-sm break-all font-mono bg-white/5 p-2 rounded">
-                                {transaction.toWalletId}
+                                {transaction.toUserId}
                             </p>
                         </div>
                     </div>

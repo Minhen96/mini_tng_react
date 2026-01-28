@@ -3,8 +3,8 @@ import apiClient from "../lib/axios";
 
 export interface Transaction {
     transactionId: string;
-    fromWalletId: string;
-    toWalletId: string;
+    fromUserId: string;
+    toUserId: string;
     amount: number;
     status: string;
     creditStatus: string;

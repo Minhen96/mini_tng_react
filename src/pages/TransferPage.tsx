@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { transfer } from "../services/walletService";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Send, User, DollarSign, Loader2, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 
 export default function TransferPage() {
@@ -10,6 +10,8 @@ export default function TransferPage() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
 
+    const navigate = useNavigate();
+
     const handleTransfer = async () => {
         if (!toEmail || !amount || Number(amount) <= 0) return;
         
@@ -17,11 +19,13 @@ export default function TransferPage() {
         setError('');
         try {
             const response = await transfer(toEmail, Number(amount));
-            if (response) {
-                setSuccess(true);
-                setAmount('');
-                setToEmail('');
-                setTimeout(() => setSuccess(false), 3000);
+            // Check if response contains transactionId. 
+            // walletService returns response.data, and now backend returns map with transactionId.
+            if (response && response.transactionId) {
+                navigate(`/transaction/${response.transactionId}`);
+            } else {
+                 // Fallback if ID invalid, though backend guarantees it.
+                 setSuccess(true);
             }
         } catch (err) {
             setError("Transfer failed. Please check balance and recipient email.");
@@ -92,7 +96,7 @@ export default function TransferPage() {
                     ) : success ? (
                         <>
                             <CheckCircle className="w-5 h-5" />
-                            Sent!
+                            Request Sent
                         </>
                     ) : (
                         <>
@@ -102,7 +106,7 @@ export default function TransferPage() {
                     )}
                 </button>
 
-                {success && <p className="text-green-400 text-sm text-center mt-4">Transfer successful!</p>}
+                {success && <p className="text-blue-400 text-sm text-center mt-4">Processing... You will be notified shortly.</p>}
             </div>
         </div>
     )
