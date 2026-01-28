@@ -26,17 +26,17 @@ function Login(){
         <div className="min-h-screen flex items-center justify-center p-4">
             <div className="glass-card w-full max-w-md p-8 space-y-8">
                 <div className="text-center">
-                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+                    <h1 className="text-4xl font-bold tracking-tight bg-linear-to-r from-white via-accent to-white bg-clip-text text-transparent mb-2">
                         Mini TNG
                     </h1>
-                    <p className="text-gray-400">Welcome back! Please login to your account.</p>
+                    <p className="text-white/40">Welcome back! Please login to your account.</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300 ml-1">Email Address</label>
+                        <label className="text-sm font-medium text-white/70 ml-1">Email Address</label>
                         <input 
-                            className="input-field"
+                            className="input-field pl-4"
                             type="text"
                             placeholder="name@example.com"
                             value={username}
@@ -45,9 +45,9 @@ function Login(){
                     </div>
                     
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-300 ml-1">Password</label>
+                        <label className="text-sm font-medium text-white/70 ml-1">Password</label>
                         <input 
-                            className="input-field"
+                            className="input-field pl-4"
                             type="password" 
                             placeholder="••••••••" 
                             value={password} 
@@ -68,7 +68,7 @@ function Login(){
 
                 <div className="text-center text-sm text-gray-400">
                     Don't have an account?{" "}
-                    <Link to="/register" className="text-purple-400 hover:text-purple-300 font-semibold transition-colors">
+                    <Link to="/register" className="text-white hover:text-white/70 font-semibold transition-colors underline underline-offset-4">
                         Sign Up
                     </Link>
                 </div>

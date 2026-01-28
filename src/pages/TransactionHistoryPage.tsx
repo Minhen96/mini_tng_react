@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { getTransactionHistory } from "../services/transactionService";
 import { getBalance } from "../services/walletService";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowUpRight, Send, Search } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Send, Search, PlusCircle } from "lucide-react";
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Transaction } from "../services/transactionService";
 
@@ -62,13 +62,13 @@ export default function TransactionHistoryPage() {
     });
 
     return (
-        <div className="min-h-screen p-6">
+        <div className="min-h-screen p-4 sm:p-6">
             <div className="max-w-4xl mx-auto">
-                <div className="flex items-center gap-4 mb-8">
-                    <Link to="/" className="p-2 rounded-full hover:bg-white/10 text-white transition-colors">
-                        <ArrowLeft className="w-6 h-6" />
+                <div className="flex items-center gap-4 mb-4 sm:mb-6">
+                    <Link to="/" className="p-2.5 rounded-xl bg-white/5 hover:bg-accent/20 text-white/50 hover:text-accent transition-all">
+                        <ArrowLeft className="w-5 h-5" />
                     </Link>
-                    <h1 className="text-2xl font-bold text-white">Transaction History</h1>
+                    <h1 className="text-xl sm:text-3xl font-bold bg-linear-to-r from-white via-accent to-white bg-clip-text text-transparent">Transaction History</h1>
                 </div>
 
                 <div className="glass-card p-6 mb-6">
@@ -77,14 +77,17 @@ export default function TransactionHistoryPage() {
                         <input 
                             type="text" 
                             placeholder="Search transactions..." 
-                            className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                            className="w-full bg-white/5 border border-mono-border rounded-lg pl-12 pr-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-accent/50 focus:shadow-subtle-focus transition-all"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <div className="glass-card p-6 h-[600px] flex flex-col">
+                <div className="glass-card p-4 sm:p-6 h-[500px] sm:h-[600px] flex flex-col relative">
+                    {/* Corner accents - hidden on mobile */}
+                    <div className="hidden sm:block absolute top-0 left-0 w-12 h-12 border-l-2 border-t-2 border-accent/30 rounded-tl-2xl pointer-events-none"></div>
+                    <div className="hidden sm:block absolute bottom-0 right-0 w-12 h-12 border-r-2 border-b-2 border-accent/30 rounded-br-2xl pointer-events-none"></div>
                     {loading ? (
                         <div className="text-center text-white/40 py-8">Loading transactions...</div>
                     ) : filteredTransactions.length > 0 ? (
@@ -103,6 +106,17 @@ export default function TransactionHistoryPage() {
                                 {rowVirtualizer.getVirtualItems().map((virtualItem) => {
                                     const tx = filteredTransactions[virtualItem.index];
                                     const incoming = isIncoming(tx);
+                                    const isTopUp = tx.fromUserId === 'SYSTEM';
+                                    
+                                    // Determine colors based on transaction type
+                                    // Top Up = blue (accent), Transfer In = green, Transfer Out = red
+                                    const iconBg = isTopUp ? 'bg-accent/20' : incoming ? 'bg-emerald-500/20' : 'bg-red-500/20';
+                                    const iconColor = isTopUp ? 'text-accent' : incoming ? 'text-emerald-400' : 'text-red-400';
+                                    const amountColor = isTopUp ? 'text-accent' : incoming ? 'text-emerald-400' : 'text-red-400';
+                                    const statusBg = isTopUp ? 'bg-accent/10 text-accent' : 
+                                                     tx.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-400' : 
+                                                     tx.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-white/5 text-white/40';
+                                    
                                     return (
                                         <div
                                             key={virtualItem.key}
@@ -114,39 +128,42 @@ export default function TransactionHistoryPage() {
                                                 height: `${virtualItem.size}px`,
                                                 transform: `translateY(${virtualItem.start}px)`,
                                             }}
-                                            className="px-2 py-1"
+                                            className="px-1 sm:px-2 py-1"
                                         >
                                             <Link 
                                                 to={`/transaction/${tx.transactionId}`} 
-                                                className="flex justify-between items-center p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer group border border-transparent hover:border-white/10 h-full"
+                                                className="flex justify-between items-center p-3 sm:p-4 hover:bg-white/5 rounded-xl transition-all cursor-pointer group border border-transparent hover:border-white/10 h-full"
                                             >
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`p-3 rounded-xl ${incoming ? 'bg-green-500/20' : 'bg-red-500/20'} group-hover:scale-110 transition-transform`}>
-                                                        {incoming ? (
-                                                            <ArrowUpRight className="w-6 h-6 text-green-400" />
+                                                <div className="flex items-center gap-3 sm:gap-4">
+                                                    <div className={`p-2.5 sm:p-3 rounded-xl ${iconBg} group-hover:scale-110 transition-transform`}>
+                                                        {isTopUp ? (
+                                                            <PlusCircle className={`w-5 h-5 sm:w-6 sm:h-6 ${iconColor}`} />
+                                                        ) : incoming ? (
+                                                            <ArrowUpRight className={`w-5 h-5 sm:w-6 sm:h-6 ${iconColor}`} />
                                                         ) : (
-                                                            <Send className="w-6 h-6 text-red-400" />
+                                                            <Send className={`w-5 h-5 sm:w-6 sm:h-6 ${iconColor}`} />
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <p className="text-white font-bold text-lg">
-                                                            {tx.fromUserId === 'SYSTEM' ? 'Top Up' : incoming ? 'Received' : 'Transfer Out'}
+                                                        <p className="text-white font-bold text-base sm:text-lg">
+                                                            {isTopUp ? 'Top Up' : incoming ? 'Received' : 'Transfer Out'}
                                                         </p>
-                                                        <p className="text-white/40 text-sm">
+                                                        <p className="text-white/40 text-xs sm:text-sm">
                                                             {tx.createdAt ? new Date(tx.createdAt).toLocaleString() : 'N/A'}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className={`font-bold text-lg ${incoming ? 'text-green-400' : 'text-white'}`}>
-                                                        {incoming ? '+' : '-'}${tx.amount.toLocaleString()}
+                                                    <p className={`font-bold text-base sm:text-lg ${amountColor}`}>
+                                                        {incoming || isTopUp ? '+' : '-'}${tx.amount.toLocaleString()}
                                                     </p>
-                                                    <span className={`text-xs px-2 py-1 rounded-full ${
-                                                        tx.status === 'SUCCESS' ? 'bg-green-500/10 text-green-400' : 
-                                                        tx.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'
-                                                    }`}>
-                                                        {tx.status}
-                                                    </span>
+                                                    {tx.status !== 'SUCCESS' && (
+                                                        <span className={`text-xs px-2 py-1 rounded-full ${
+                                                            tx.status === 'PENDING' || tx.status === 'FROZEN' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'
+                                                        }`}>
+                                                            {tx.status === 'FROZEN' ? 'PENDING' : tx.status}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </Link>
                                         </div>

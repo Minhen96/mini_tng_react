@@ -27,27 +27,39 @@ export default function TransferPage() {
                  // Fallback if ID invalid, though backend guarantees it.
                  setSuccess(true);
             }
-        } catch (err) {
-            setError("Transfer failed. Please check balance and recipient email.");
+        } catch (err: any) {
+            // Parse specific error messages from API response
+            const errorMessage = err?.response?.data?.message || err?.response?.data?.error || '';
+            const errorCode = err?.response?.status;
+            
+            if (errorCode === 404 || errorMessage.toLowerCase().includes('not found') || errorMessage.toLowerCase().includes('user')) {
+                setError('Recipient not found. Please check the email address.');
+            } else if (errorCode === 400 && (errorMessage.toLowerCase().includes('insufficient') || errorMessage.toLowerCase().includes('balance'))) {
+                setError('Insufficient balance. Please top up your wallet first.');
+            } else if (errorMessage) {
+                setError(errorMessage);
+            } else {
+                setError('Transfer failed. Please try again later.');
+            }
         }
         setLoading(false);
     }
 
     return (
         <div className="max-w-xl mx-auto p-4 pt-10">
-             <Link to="/" className="inline-flex items-center text-white/60 hover:text-white mb-6 transition-colors">
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Back to Dashboard
-            </Link>
+        <Link to="/" className="glass-card p-4 mb-6 flex items-center gap-2 text-white/50 hover:text-white hover:bg-white/5 transition-all">
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back to Dashboard</span>
+        </Link>
 
             <div className="glass-card p-8">
-                    <div className="flex items-center gap-4 mb-6">
-                    <div className="p-3 bg-blue-500/20 rounded-xl">
-                        <Send className="w-8 h-8 text-blue-400" />
+                    <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 bg-accent/20 rounded-xl">
+                        <Send className="w-8 h-8 text-accent" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-white">Transfer Funds</h2>
-                        <p className="text-white/60 text-sm">Send to friends and family instantly</p>
+                        <h2 className="text-xl font-semibold text-white">Transfer Funds</h2>
+                        <p className="text-white/40 text-sm">Send to friends and family instantly</p>
                     </div>
                 </div>
 
@@ -59,7 +71,7 @@ export default function TransferPage() {
                             type="email" 
                             value={toEmail} 
                             onChange={(e) => setToEmail(e.target.value)} 
-                            className="input-field pl-12"
+                            className="input-field pl-14"
                             placeholder="john.doe@example.com"
                         />
                     </div>
@@ -73,7 +85,7 @@ export default function TransferPage() {
                             type="number" 
                             value={amount} 
                             onChange={(e) => setAmount(e.target.value)} 
-                            className="input-field pl-12 text-xl font-bold"
+                            className="input-field pl-14 text-xl font-bold"
                             placeholder="0.00"
                         />
                     </div>
@@ -106,7 +118,7 @@ export default function TransferPage() {
                     )}
                 </button>
 
-                {success && <p className="text-blue-400 text-sm text-center mt-4">Processing... You will be notified shortly.</p>}
+                {success && <p className="text-white/60 text-sm text-center mt-4">Processing... You will be notified shortly.</p>}
             </div>
         </div>
     )

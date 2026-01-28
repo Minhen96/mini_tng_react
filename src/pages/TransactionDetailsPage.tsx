@@ -64,32 +64,39 @@ export default function TransactionDetailsPage() {
     const incoming = isIncoming(transaction);
 
     return (
-        <div className="min-h-screen p-6 flex items-center justify-center">
+        <div className="min-h-screen p-4 sm:p-6 flex items-center justify-center">
             <div className="w-full max-w-md">
-                <div className="flex items-center gap-4 mb-6">
-                    <Link to="/transaction-history" className="p-2 rounded-full hover:bg-white/10 text-white transition-colors">
-                        <ArrowLeft className="w-6 h-6" />
+                <div className="flex items-center gap-4 mb-4 sm:mb-6">
+                    <Link to="/" className="p-2.5 rounded-xl bg-white/5 hover:bg-accent/20 text-white/50 hover:text-accent transition-all">
+                        <ArrowLeft className="w-5 h-5" />
                     </Link>
-                    <h1 className="text-xl font-bold text-white">Transaction Details</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold bg-linear-to-r from-white via-accent to-white bg-clip-text text-transparent">Transaction Details</h1>
                 </div>
 
-                <div className="glass-card overflow-hidden">
-                    <div className="p-8 text-center border-b border-white/10 bg-white/5">
-                        <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 ${incoming ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                <div className="glass-card overflow-hidden relative">
+                    {/* Corner accents - hidden on mobile */}
+                    <div className="hidden sm:block absolute top-0 left-0 w-12 h-12 border-l-2 border-t-2 border-accent/30 rounded-tl-2xl pointer-events-none z-10"></div>
+                    <div className="hidden sm:block absolute bottom-0 right-0 w-12 h-12 border-r-2 border-b-2 border-accent/30 rounded-br-2xl pointer-events-none z-10"></div>
+                    
+                    {/* Amount Section */}
+                    <div className="p-5 sm:p-8 text-center border-b border-accent/10 bg-linear-to-b from-accent/5 to-transparent">
+                        <div className={`w-14 h-14 sm:w-20 sm:h-20 mx-auto rounded-full flex items-center justify-center mb-3 sm:mb-4 ${incoming ? 'bg-accent/20 shadow-[0_0_30px_rgba(74,158,255,0.2)]' : 'bg-white/5'}`}>
                              {incoming ? (
-                                <ArrowUpRight className={`w-10 h-10 ${incoming ? 'text-green-400' : 'text-red-400'}`} />
+                                <ArrowUpRight className="w-7 h-7 sm:w-10 sm:h-10 text-accent" />
                             ) : (
-                                <Send className={`w-10 h-10 ${incoming ? 'text-green-400' : 'text-red-400'}`} />
+                                <Send className="w-7 h-7 sm:w-10 sm:h-10 text-white/50" />
                             )}
                         </div>
-                        <p className={`text-3xl font-bold mb-1 ${incoming ? 'text-green-400' : 'text-white'}`}>
+                        <p className="text-3xl sm:text-5xl font-bold tracking-tight mb-2 text-white drop-shadow-[0_0_30px_rgba(74,158,255,0.15)]">
                             {incoming ? '+' : '-'}${transaction.amount.toLocaleString()}
                         </p>
-                        <p className="text-white/60 text-sm">{transaction.fromUserId === 'SYSTEM' ? 'Top Up Success' : incoming ? 'Payment Received' : 'Transfer Sent'}</p>
+                        <p className="text-white/40 text-sm uppercase tracking-wider">
+                            {transaction.fromUserId === 'SYSTEM' ? 'Top Up' : incoming ? 'Received' : 'Sent'}
+                        </p>
                         
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mt-4 ${
-                            transaction.status === 'SUCCESS' ? 'bg-green-500/10 text-green-400' : 
-                            transaction.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'
+                        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mt-6 ${
+                            transaction.status === 'SUCCESS' ? 'bg-accent/10 text-accent' : 
+                            transaction.status === 'PENDING' ? 'bg-white/5 text-white/60' : 'bg-white/5 text-white/40'
                         }`}>
                             {transaction.status === 'SUCCESS' ? <CheckCircle className="w-3 h-3" /> : 
                              transaction.status === 'PENDING' ? <Clock className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
@@ -97,43 +104,36 @@ export default function TransactionDetailsPage() {
                         </div>
                     </div>
 
-                    <div className="p-6 space-y-6">
-                        <div className="space-y-1">
-                            <p className="text-white/40 text-xs uppercase tracking-wider">Transaction ID</p>
-                            <div className="flex items-center justify-between group">
-                                <p className="text-white font-mono text-sm break-all">{transaction.transactionId}</p>
-                                <button className="text-white/40 hover:text-white transition-colors" title="Copy ID">
+                    {/* Details Section */}
+                    <div className="p-6 space-y-5">
+                        <div className="flex justify-between items-center py-3 border-b border-mono-border">
+                            <span className="text-white/40 text-sm">Date</span>
+                            <span className="text-white text-sm">
+                                {transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-center py-3 border-b border-mono-border">
+                            <span className="text-white/40 text-sm">Time</span>
+                            <span className="text-white text-sm">
+                                {transaction.createdAt ? new Date(transaction.createdAt).toLocaleTimeString() : 'N/A'}
+                            </span>
+                        </div>
+                        <div className="py-3 border-b border-mono-border">
+                            <p className="text-white/40 text-sm mb-2">Transaction ID</p>
+                            <div className="flex items-center justify-between">
+                                <p className="text-white font-mono text-xs break-all">{transaction.transactionId}</p>
+                                <button className="text-white/30 hover:text-white transition-colors ml-2" title="Copy ID">
                                     <Copy className="w-4 h-4" />
                                 </button>
                             </div>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="space-y-1">
-                                <p className="text-white/40 text-xs uppercase tracking-wider">Date</p>
-                                <p className="text-white text-sm">
-                                    {transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'N/A'}
-                                </p>
-                            </div>
-                             <div className="space-y-1">
-                                <p className="text-white/40 text-xs uppercase tracking-wider">Time</p>
-                                <p className="text-white text-sm">
-                                    {transaction.createdAt ? new Date(transaction.createdAt).toLocaleTimeString() : 'N/A'}
-                                </p>
-                            </div>
+                        <div className="py-3 border-b border-mono-border">
+                            <p className="text-white/40 text-sm mb-2">From</p>
+                            <p className="text-white text-sm font-mono break-all">{transaction.fromUserId}</p>
                         </div>
-
-                        <div className="space-y-1">
-                            <p className="text-white/40 text-xs uppercase tracking-wider">From Wallet</p>
-                            <p className="text-white text-sm break-all font-mono bg-white/5 p-2 rounded">
-                                {transaction.fromUserId}
-                            </p>
-                        </div>
-                         <div className="space-y-1">
-                            <p className="text-white/40 text-xs uppercase tracking-wider">To Wallet</p>
-                            <p className="text-white text-sm break-all font-mono bg-white/5 p-2 rounded">
-                                {transaction.toUserId}
-                            </p>
+                        <div className="py-3">
+                            <p className="text-white/40 text-sm mb-2">To</p>
+                            <p className="text-white text-sm font-mono break-all">{transaction.toUserId}</p>
                         </div>
                     </div>
                 </div>

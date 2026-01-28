@@ -25,19 +25,19 @@ export default function TopUpPage() {
 
     return (
         <div className="max-w-xl mx-auto p-4 pt-10">
-            <Link to="/" className="inline-flex items-center text-white/60 hover:text-white mb-6 transition-colors">
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                Back to Dashboard
+            <Link to="/" className="glass-card p-4 mb-6 flex items-center gap-2 text-white/50 hover:text-white hover:bg-white/5 transition-all">
+                <ArrowLeft className="w-4 h-4" />
+                <span className="text-sm">Back to Dashboard</span>
             </Link>
 
                 <div className="glass-card p-8">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="p-3 bg-purple-500/20 rounded-xl">
-                            <CreditCard className="w-8 h-8 text-purple-400" />
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className="p-3 bg-accent/20 rounded-xl">
+                            <CreditCard className="w-8 h-8 text-accent" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">Add Funds</h2>
-                            <p className="text-white/60 text-sm">Use your linked card or bank</p>
+                            <h2 className="text-xl font-semibold text-white">Add Funds</h2>
+                            <p className="text-white/40 text-sm">Use your linked card or bank</p>
                         </div>
                     </div>
 
@@ -49,7 +49,7 @@ export default function TopUpPage() {
                                 type="number" 
                                 value={amount} 
                                 onChange={(e) => setAmount(e.target.value)} 
-                                className="input-field pl-12 text-2xl font-bold"
+                                className="input-field pl-14 text-2xl font-bold"
                                 placeholder="0.00"
                             />
                         </div>
@@ -64,8 +64,8 @@ export default function TopUpPage() {
                                     onClick={() => setAmount(amt)}
                                     className={`px-4 py-2 rounded-lg border transition-all duration-200 font-medium ${
                                         Number(amount) === amt
-                                        ? "bg-purple-500 border-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)]"
-                                        : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20"
+                                        ? "bg-white border-white text-black"
+                                        : "bg-white/5 border-mono-border text-white/70 hover:bg-white/10 hover:border-white/20"
                                     }`}
                                 >
                                     ${amt}
@@ -93,7 +93,7 @@ export default function TopUpPage() {
                         )}
                     </button>
                     
-                    {success && <p className="text-green-400 text-sm text-center mt-4">Funds added successfully!</p>}
+                    {success && <p className="text-white/60 text-sm text-center mt-4">Funds added successfully!</p>}
                 </div>
                 
                 <p className="text-center text-white/40 text-xs mt-6">
