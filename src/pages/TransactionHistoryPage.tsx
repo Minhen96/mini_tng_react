@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getTransactionHistory } from "../services/transactionService";
 import { getBalance } from "../services/walletService";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, Send, Search } from "lucide-react";
+import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Transaction } from "../services/transactionService";
 
 export default function TransactionHistoryPage() {
@@ -11,6 +12,8 @@ export default function TransactionHistoryPage() {
     const [loading, setLoading] = useState(true);
     const [walletId, setWalletId] = useState<string>('');
     const [search, setSearch] = useState('');
+
+    const parentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -46,10 +49,17 @@ export default function TransactionHistoryPage() {
     }, [search, transactions]);
 
     const isIncoming = (tx: Transaction) => {
-        if (tx.fromWalletId === 'SYSTEM') return true;
-        if (tx.toWalletId === walletId) return true;
+        if (tx.fromUserId === 'SYSTEM') return true;
+        if (tx.toUserId === walletId) return true;
         return false;
     }
+
+    const rowVirtualizer = useVirtualizer({
+        count: filteredTransactions.length,
+        getScrollElement: () => parentRef.current,
+        estimateSize: () => 90, // Estimated row height
+        overscan: 5,
+    });
 
     return (
         <div className="min-h-screen p-6">
@@ -74,55 +84,82 @@ export default function TransactionHistoryPage() {
                     </div>
                 </div>
 
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 h-[600px] flex flex-col">
                     {loading ? (
                         <div className="text-center text-white/40 py-8">Loading transactions...</div>
-                    ) : (
-                        <div className="space-y-4">
-                            {filteredTransactions.length > 0 ? (
-                                filteredTransactions.map((tx) => {
+                    ) : filteredTransactions.length > 0 ? (
+                        <div 
+                            ref={parentRef} 
+                            className="flex-1 overflow-y-auto"
+                            style={{ contain: 'strict' }}
+                        >
+                            <div
+                                style={{
+                                    height: `${rowVirtualizer.getTotalSize()}px`,
+                                    width: '100%',
+                                    position: 'relative',
+                                }}
+                            >
+                                {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                                    const tx = filteredTransactions[virtualItem.index];
                                     const incoming = isIncoming(tx);
                                     return (
-                                        <Link to={`/transaction/${tx.transactionId}`} key={tx.transactionId} className="flex justify-between items-center p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer group border border-transparent hover:border-white/10">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`p-3 rounded-xl ${incoming ? 'bg-green-500/20' : 'bg-red-500/20'} group-hover:scale-110 transition-transform`}>
-                                                    {incoming ? (
-                                                        <ArrowUpRight className="w-6 h-6 text-green-400" />
-                                                    ) : (
-                                                        <Send className="w-6 h-6 text-red-400" />
-                                                    )}
+                                        <div
+                                            key={virtualItem.key}
+                                            style={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                width: '100%',
+                                                height: `${virtualItem.size}px`,
+                                                transform: `translateY(${virtualItem.start}px)`,
+                                            }}
+                                            className="px-2 py-1"
+                                        >
+                                            <Link 
+                                                to={`/transaction/${tx.transactionId}`} 
+                                                className="flex justify-between items-center p-4 hover:bg-white/5 rounded-xl transition-colors cursor-pointer group border border-transparent hover:border-white/10 h-full"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`p-3 rounded-xl ${incoming ? 'bg-green-500/20' : 'bg-red-500/20'} group-hover:scale-110 transition-transform`}>
+                                                        {incoming ? (
+                                                            <ArrowUpRight className="w-6 h-6 text-green-400" />
+                                                        ) : (
+                                                            <Send className="w-6 h-6 text-red-400" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-white font-bold text-lg">
+                                                            {tx.fromUserId === 'SYSTEM' ? 'Top Up' : incoming ? 'Received' : 'Transfer Out'}
+                                                        </p>
+                                                        <p className="text-white/40 text-sm">
+                                                            {tx.createdAt ? new Date(tx.createdAt).toLocaleString() : 'N/A'}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-white font-bold text-lg">
-                                                        {tx.fromWalletId === 'SYSTEM' ? 'Top Up' : incoming ? 'Received' : 'Transfer Out'}
+                                                <div className="text-right">
+                                                    <p className={`font-bold text-lg ${incoming ? 'text-green-400' : 'text-white'}`}>
+                                                        {incoming ? '+' : '-'}${tx.amount.toLocaleString()}
                                                     </p>
-                                                    <p className="text-white/40 text-sm">
-                                                        {tx.createdAt ? new Date(tx.createdAt).toLocaleString() : 'N/A'}
-                                                    </p>
+                                                    <span className={`text-xs px-2 py-1 rounded-full ${
+                                                        tx.status === 'SUCCESS' ? 'bg-green-500/10 text-green-400' : 
+                                                        tx.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'
+                                                    }`}>
+                                                        {tx.status}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className={`font-bold text-lg ${incoming ? 'text-green-400' : 'text-white'}`}>
-                                                    {incoming ? '+' : '-'}${tx.amount.toLocaleString()}
-                                                </p>
-                                                <span className={`text-xs px-2 py-1 rounded-full ${
-                                                    tx.status === 'SUCCESS' ? 'bg-green-500/10 text-green-400' : 
-                                                    tx.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-red-500/10 text-red-400'
-                                                }`}>
-                                                    {tx.status}
-                                                </span>
-                                            </div>
-                                        </Link>
-                                    )
-                                })
-                            ) : (
-                                <div className="text-center py-12">
-                                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <Search className="w-8 h-8 text-white/20" />
-                                    </div>
-                                    <p className="text-white/40">No transactions found</p>
-                                </div>
-                            )}
+                                            </Link>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-12">
+                            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Search className="w-8 h-8 text-white/20" />
+                            </div>
+                            <p className="text-white/40">No transactions found</p>
                         </div>
                     )}
                 </div>
