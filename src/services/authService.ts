@@ -1,5 +1,6 @@
+import type { User } from '../context/AuthContext';
 import apiClient from '../lib/axios';
-import type { LoginResponse, VerifyOtpResponse } from '../types/authTypes';
+import type { LoginResponse } from '../types/authTypes';
 
 
 export const register = async (email: string, name: string, password: string): Promise<boolean> => {
@@ -19,7 +20,7 @@ export const login = async (email: string, password: string): Promise<LoginRespo
     return response.data;
 }
 
-export const verifyOtp = async (email: string, otpCode: string): Promise<VerifyOtpResponse> => {
+export const verifyOtp = async (email: string, otpCode: string): Promise<boolean> => {
     const response = await apiClient.post('/auth/verify', {
         email: email,
         otpCode: otpCode
@@ -47,7 +48,14 @@ export const logout = async () => {
     return response.data;
 }
 
-export const getProfile = async () => {
+export const getProfile = async (): Promise<User> => {
     const response = await apiClient.get('users/profile')
+    return response.data.data;
+}
+
+export const updateProfile = async (name: string) => {
+    const response = await apiClient.put('users/profile', {
+        name: name
+    })
     return response.data;
 }

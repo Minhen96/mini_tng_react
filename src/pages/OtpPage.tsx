@@ -1,22 +1,29 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { verifyOtp, resendOtp } from "../services/authService";
+import { useAuthContext } from "../context/AuthContext";
 
 export default function OtpPage() {
     const [otpCode, setOtpCode] = useState('');
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
+    const AuthContext = useAuthContext();
     const location = useLocation();
-    // Default to empty string or handle undefined state safely
     const email = location.state?.email || '';
 
     const handleOtpSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try{
-            const response = await verifyOtp(email, otpCode);
-            console.log(response);
-            navigate('/');
+            const response = await AuthContext.verifyOtp(email, otpCode);
+            if(response) {
+                setMessage("Verification Successful! Redirecting to login...");
+                setTimeout(() => {
+                    navigate('/login');
+                }, 2000);
+            } else {
+                setError("Verification Failed. Please try again.");
+            }
         }catch(error){
             console.log(error);
             setError("Invalid Code. Please try again.");

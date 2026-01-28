@@ -15,7 +15,7 @@ function Login(){
         try{
             const response = await authContext.login(username, password);
             console.log(response);
-            navigate("/test");
+            navigate("/");
         }catch(error){
             setError("Invalid credentials");
             console.log(error);

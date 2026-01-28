@@ -7,16 +7,23 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import OtpPage from './pages/OtpPage'
 
+import HomePage from './pages/HomePage'
+import TopUpPage from './pages/TopUpPage'
+import TransferPage from './pages/TransferPage'
+
 function App() {
 
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/" element={<LoginPage/>}/>
+        <Route path="/login" element={<LoginPage/>}/>
         <Route path="/register" element={<RegisterPage/>}/>
         <Route path="/verify-otp" element={<OtpPage/>}/>
         
         <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<HomePage/>} />
+          <Route path="/top-up" element={<TopUpPage/>} />
+          <Route path="/transfer" element={<TransferPage/>} />
           <Route path="/test" element={<Test/>} />
         </Route>
       </Routes>
