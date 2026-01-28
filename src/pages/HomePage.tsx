@@ -9,6 +9,7 @@ import type { Transaction } from "../services/transactionService";
 export default function HomePage() {
 
     const [balance, setBalance] = useState(0);
+    const [walletId, setWalletId] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const { user, logout } = useAuthContext();
     const [transactionHistory, setTransactionHistory] = useState<Transaction[]>();
@@ -16,20 +17,36 @@ export default function HomePage() {
     useEffect(() => {
         const fetchBalance = async () => {
             setLoading(true);
-            const response = await getBalance();
-            setBalance(response);
+            try {
+                const response = await getBalance();
+                setBalance(response.balance);
+                setWalletId(response.walletId);
+            } catch (error) {
+                console.error("Failed to fetch balance", error);
+            }
             setLoading(false);
         }
         fetchBalance();
 
         const fetchTransactionHistory = async () => {
             setLoading(true);
-            const response = await getTransactionHistory();
-            setTransactionHistory(response);
+            try {
+                const response = await getTransactionHistory();
+                setTransactionHistory(response);
+            } catch (error) {
+                console.error("Failed to fetch transactions", error);
+            }
             setLoading(false);
         }
         fetchTransactionHistory();
     }, []);
+
+    const isIncoming = (tx: Transaction) => {
+        if (tx.fromWalletId === 'SYSTEM') return true;
+        // If I am the receiver (toWallet == myWallet), it is incoming
+        if (tx.toWalletId === walletId) return true;
+        return false;
+    }
 
     return (
         <div className="max-w-4xl mx-auto p-6">
@@ -64,7 +81,7 @@ export default function HomePage() {
                 </div>
                 
                 <div className="mt-8 flex gap-4">
-                     <Link to="/top-up" className="btn-primary flex items-center gap-2 !w-auto px-6">
+                     <Link to="/top-up" className="btn-primary flex items-center gap-2 w-auto! px-6">
                         <PlusCircle className="w-5 h-5" />
                         Top Up
                     </Link>
@@ -77,34 +94,41 @@ export default function HomePage() {
 
             {/* Recent Activity */}
             <div className="glass-card p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Recent Transactions</h3>
+                <div className="flex justify-between items-center mb-4">
+                     <h3 className="text-lg font-bold text-white">Recent Transactions</h3>
+                     <Link to="/transaction-history" className="text-sm text-blue-400 hover:text-blue-300">View All</Link>
+                </div>
+               
                 <div className="space-y-4">
                     {transactionHistory && transactionHistory.length > 0 ? (
-                        transactionHistory.map((tx) => (
-                            <Link to={`/transactions/${tx.transactionId}`} key={tx.transactionId} className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors cursor-pointer block">
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${tx.fromWalletId === 'SYSTEM' ? 'bg-green-500/20' : 'bg-blue-500/20'}`}>
-                                        {tx.fromWalletId === 'SYSTEM' ? (
-                                             <PlusCircle className="w-5 h-5 text-green-400" />
-                                        ) : (
-                                            <Send className="w-5 h-5 text-blue-400" />
-                                        )}
+                        transactionHistory.slice(0, 5).map((tx) => {
+                            const incoming = isIncoming(tx);
+                            return (
+                                <Link to={`/transaction/${tx.transactionId}`} key={tx.transactionId} className="flex justify-between items-center p-3 hover:bg-white/5 rounded-lg transition-colors cursor-pointer block">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`p-2 rounded-lg ${incoming ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                                            {incoming ? (
+                                                <ArrowUpRight className="w-5 h-5 text-green-400" />
+                                            ) : (
+                                                <Send className="w-5 h-5 text-red-400" />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-medium">
+                                                {tx.fromWalletId === 'SYSTEM' ? 'Top Up' : incoming ? 'Received' : 'Transfer Out'}
+                                            </p>
+                                            <p className="text-white/40 text-xs">
+                                                {/* Fix Date Rendering safely */}
+                                                {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : 'N/A'}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-white font-medium">
-                                            {tx.fromWalletId === 'SYSTEM' ? 'Top Up' : 'Transfer'}
-                                        </p>
-                                        <p className="text-white/40 text-xs">
-                                            {/* Fix Date Rendering safely */}
-                                            {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString() : 'N/A'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <span className={`font-bold ${tx.fromWalletId === 'SYSTEM' ? 'text-green-400' : 'text-white'}`}>
-                                    {tx.fromWalletId === 'SYSTEM' ? '+' : '-'}${tx.amount.toLocaleString()}
-                                </span>
-                            </Link>
-                        ))
+                                    <span className={`font-bold ${incoming ? 'text-green-400' : 'text-white'}`}>
+                                        {incoming ? '+' : '-'}${tx.amount.toLocaleString()}
+                                    </span>
+                                </Link>
+                            )
+                        })
                     ) : (
                         <p className="text-white/40 text-center py-4">No recent activity</p>
                     )}
